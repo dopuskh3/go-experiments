@@ -11,7 +11,7 @@ func TestBloomFiterParameters (t *testing.T) {
 }
 
 func TestBloomFilterFilter(t *testing.T) {
-  m, k := getParameters(1000, 0.001)
+  m, k := GetParameters(1000, 0.001)
   t.Logf("Parameters are m=%d, k=%d", m, k)
 }
 
