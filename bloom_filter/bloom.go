@@ -2,9 +2,8 @@ package goexperiment
 
 import (
   "hash"
-  "encoding/binary"
-  //"hash/fnv"
   "github.com/spaolacci/murmur3"
+  "github.com/willf/bitset"
   "math"
 )
 
@@ -13,43 +12,47 @@ type BloomFilter struct {
   m uint
   k uint
   h hash.Hash64
-  bytes []byte
+  bits *bitset.BitSet
 }
 
 // Returns a new BloomFilter
 func New(maxSize uint, fpProb float64) *BloomFilter {
   // TODO: error if fpProb > 1
   m, k := GetParameters(maxSize, fpProb)
-  b := make([]byte, m/8)
+  b := bitset.New(m)
   return &BloomFilter{m, k, murmur3.New64(), b}
 }
 
 // Tests for `input` availability in the bloom filter.
-func (f *BloomFilter) test(input []byte) bool {
-  return false
+func (f *BloomFilter) Test(input []byte) bool {
+  a, b := f.getHash(input)
+  for i := uint(0); i <  f.k; i++ {
+    // Location for this hash in the filter
+    loc := ( a + b * uint32(i) ) % uint32(f.m)
+    if !f.bits.Test(uint(loc)){
+      return false
+    }
+  }
+  return true
 }
 
 func (f *BloomFilter) getHash(input []byte) (a uint32, b uint32){
-  // to implement
   f.h.Reset()
   f.h.Write(input)
-  // Converts hash value to from uint64 to []byte 
-  // and to uint32 again.
-  vbuff := make([]byte, 8)
-  binary.PutUvarint(vbuff, f.h.Sum64())
-  upper := vbuff[0:4]
-  lower := vbuff[4:8]
-  return binary.BigEndian.Uint32(lower), binary.BigEndian.Uint32(upper)
+  hash := f.h.Sum64()
+  upper := uint32( (hash>>4) & 0x0000FFFF)
+  lower := uint32( hash & 0x0000FFFF )
+  return lower, upper
 }
 
 // Adds `input` into the bloom filter.
-func (f *BloomFilter) add(input []byte) *BloomFilter {
+func (f *BloomFilter) Add(input []byte) *BloomFilter {
   var loc uint32
   a, b := f.getHash(input)
   for i := uint(0); i <  f.k; i++ {
     // Location for this hash in the filter
     loc = ( a + b * uint32(i) ) % uint32(f.m)
-    f.bytes[loc].Set()
+    f.bits.Set(uint(loc))
   }
   return f
 }
@@ -70,8 +73,5 @@ func GetParameters(maxSize uint, fpProb float64) (m uint, k uint) {
 }
 
 
-//func (t *BloomFilter) computeHash(input []byte) uint32 {
-//  return 10;
-//}
 
 

@@ -5,9 +5,8 @@ import (
 )
 
 func TestBloomFiterParameters (t *testing.T) {
-  t.Log("This is a test.")
   filter := New(1000, 0.1)
-  t.Log(filter.bytes)
+  t.Logf("Filter parameters m=%d k=%d" , filter.m, filter.k)
 }
 
 func TestBloomFilterFilter(t *testing.T) {
@@ -15,3 +14,13 @@ func TestBloomFilterFilter(t *testing.T) {
   t.Logf("Parameters are m=%d, k=%d", m, k)
 }
 
+func TestBloomFilterKeyIsPresent(t *testing.T) {
+  filter := New(1000, 0.001)
+  filter.Add([]byte("FOO"))
+  if filter.Test([]byte("BAR")) {
+    t.Error("BAR is in set and should not be in filter.")
+  }
+  if filter.Test([]byte("FOO")) {
+    t.Logf("You're lucky, FOO is in filter")
+  }
+}
