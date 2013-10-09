@@ -13,6 +13,6 @@ for subproj in $subprojects; do
   pushd $subproj > /dev/null
   echo "Building and testing $subproj..."
   go build
-  go test
+  go test -v
   popd > /dev/null
 done
