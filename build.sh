@@ -1,4 +1,4 @@
-#!/bin/bash -xe
+#!/bin/bash -e
 subprojects=bloom_filter
 
 dependencies="github.com/spaolacci/murmur3 \
